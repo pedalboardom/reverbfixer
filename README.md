@@ -1,2 +1,4 @@
 # reverbfixer
-Quick webapp to correct those annoying redirects from reverb.com sold listings
+Fix those annoying broken reverb.com sold listing URLs
+
+Visit: [https://pedalboardom.github.io/reverbfixer/](https://pedalboardom.github.io/reverbfixer/)
