@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reverb Sold Listing Converter</title>
+    <style>
+        :root {
+            --primary: #f58c00; /* Reverb Orange-ish */
+            --primary-hover: #e65100;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box; /* Ensures padding doesn't expand width */
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(245, 140, 0, 0.1);
+        }
+
+        button.btn-primary {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .result-area {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .result-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .link-display {
+            background-color: #f9fafb;
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            border-radius: 6px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: var(--primary-hover);
+        }
+
+        .action-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        button.btn-secondary {
+            flex: 1;
+            background-color: white;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.6rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        button.btn-secondary:hover {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .error-msg {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Reverb Link Fixer</h1>
+    <p class="subtitle">Convert "Sold Listing" redirect URLs to viewable item pages.</p>
+
+    <div class="input-group">
+        <label for="urlInput">Paste Broken URL</label>
+        <input type="text" id="urlInput" placeholder="https://reverb.com/p/item-name?ended_listing=12345">
+        <div id="errorMsg" class="error-msg">Invalid URL format. Could not find product ID or slug.</div>
+    </div>
+
+    <button class="btn-primary" onclick="convertUrl()">Convert & Open</button>
+
+    <div id="resultArea" class="result-area">
+        <div class="result-label">Fixed URL</div>
+        <div id="linkDisplay" class="link-display"></div>
+        
+        <div class="action-row">
+            <button class="btn-secondary" onclick="copyToClipboard()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy
+            </button>
+            <button class="btn-secondary" onclick="openAgain()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                Open Again
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast">Copied to clipboard!</div>
+
+<script>
+    function convertUrl() {
+        const input = document.getElementById('urlInput').value.trim();
+        const errorMsg = document.getElementById('errorMsg');
+        const resultArea = document.getElementById('resultArea');
+        const linkDisplay = document.getElementById('linkDisplay');
+
+        // Regex Logic:
+        // 1. Look for '/p/' followed by the product slug (group 1)
+        // 2. Look for 'ended_listing=' followed by digits (group 2)
+        // This handles various params before or after the target ones
+        const regex = /reverb\.com\/p\/([^\?\/]+).*?ended_listing=(\d+)/;
+        const match = input.match(regex);
+
+        if (match && match[1] && match[2]) {
+            const slug = match[1];
+            const id = match[2];
+            
+            // Construct new URL: https://reverb.com/item/ID-SLUG?show_sold=true
+            const newUrl = `https://reverb.com/item/${id}-${slug}?show_sold=true`;
+
+            // Update UI
+            errorMsg.style.display = 'none';
+            linkDisplay.textContent = newUrl;
+            resultArea.style.display = 'block';
+
+            // Open in new window
+            window.open(newUrl, '_blank');
+        } else {
+            // Handle invalid input
+            errorMsg.style.display = 'block';
+            resultArea.style.display = 'none';
+        }
+    }
+
+    function copyToClipboard() {
+        const text = document.getElementById('linkDisplay').textContent;
+        
+        // Fallback for older browsers or if navigator is restricted
+        if (!navigator.clipboard) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textArea);
+            return;
+        }
+
+        // Modern API
+        navigator.clipboard.writeText(text).then(function() {
+            showToast();
+        }, function(err) {
+            console.error('Async: Could not copy text: ', err);
+        });
+    }
+
+    function openAgain() {
+        const text = document.getElementById('linkDisplay').textContent;
+        if(text) window.open(text, '_blank');
+    }
+
+    function showToast() {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+    
+    // Allow pressing "Enter" to convert
+    document.getElementById("urlInput").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        convertUrl();
+      }
+    });
+</script>
+
+</body>
+</html>
